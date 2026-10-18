@@ -20,7 +20,11 @@
 //    overlaps the timer and tray menu ids;
 //  - a right-click "Position" submenu (six anchor positions, 20 px nudges and a
 //    reset) that overrides the Position and Offset settings until reset;
-//  - Alt + left-drag on the island moves it, and the spot is remembered.
+//  - the collapsed idle strip can show the battery percentage (with a lightning
+//    bolt while charging) after the clock and weather, behind a new setting;
+//  - settings for the auto-expand duration on track change (was a fixed 5 s) and
+//    an option to widen the collapsed media pill to show the full song title
+//    (requested in the original project's issue #99).
 // Everything else is unchanged.
 //
 // MIT License. Permission is hereby granted, free of charge, to any person
@@ -42,111 +46,126 @@
 /*
 # Dynamic Island Plus
 
-Based on [Dynamic Island for Windows](https://github.com/devcode90/Dynamic-Island-for-Windows)
-by devcode90 (MIT). This version adds nine more color themes: Glass Blue,
-Midnight Violet, Aurora, Crimson, Sunset, Ocean, Cyber Neon, and the light
-themes Sakura and Mint. It also adds a right-click **Position** menu: pick one of
-six anchor positions (top or bottom, left, center or right), nudge the island
-20 px at a time, or reset to the position from Mod Settings. Hold **Alt** and
-drag the island with the left mouse button to move it freely; it stays where
-you drop it. Turn off the
-original mod before using this one, since both use the same window and shortcut.
-
----
-
-A fluid, living overlay inspired by Apple's Dynamic Island, bringing a beautiful, highly-responsive UI to your Windows desktop. Built natively with hardware-accelerated Direct2D rendering for a buttery-smooth 60 FPS experience.
-
-![Dynamic Island running on the desktop](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/desktop.png)
+A pill-shaped overlay for your Windows desktop that comes alive when something
+happens: music plays, a notification arrives, you copy text, your battery drains.
+It expands on hover into dashboards for media, calendar, weather, hardware stats
+and more, and it is drawn with hardware-accelerated Direct2D so animations stay
+smooth.
 
 ![Dynamic Island surfaces](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/Full-preview-v2.png)
 
 ---
 
-## 🚀 Modules & Dashboards
+## What is new in Plus
 
-The Dynamic Island intelligently expands to display context-aware dashboards. You can easily navigate between different views using your mouse scroll wheel.
+- **17 themes.** Obsidian, Graphite, Slate, Nord, Evergreen, Espresso, Plum and
+  Porcelain, plus Glass Blue, Midnight Violet, Aurora, Crimson, Sunset, Ocean,
+  Cyber Neon and the light themes Sakura and Mint. Pick one in Mod Settings or
+  from the right-click **Theme** menu, or use your own hex colors.
+- **Move the island from the right-click menu.** **Position** offers six anchors
+  (top or bottom, left, center or right), 20 px nudges in every direction and a
+  reset. Your choice is remembered and overrides the Position and Offset
+  settings until you reset it.
+- **Battery in the idle strip.** The collapsed island shows your battery
+  percentage after the clock and weather, with a lightning bolt while charging.
+  Laptops only. Turn it off under Mod Settings > Modules.
+- **Auto-expand duration.** Choose how long the island stays open after a track
+  change, from 1 to 30 seconds.
+- **Full song title when collapsed.** One switch makes the collapsed media pill
+  grow to fit the whole title instead of scrolling it, up to a maximum width you
+  choose. While it is on, lyrics no longer replace the title on the collapsed
+  pill; they still show when the island is expanded.
 
-| Module | Description | Preview |
+---
+
+## Modules
+
+The island expands to show context-aware dashboards. Scroll the mouse wheel over
+it to move between them.
+
+| Module | What it does | Preview |
 | :--- | :--- | :--- |
-| **Media Player** | Shows live album art, track details, audio waveforms, and full playback controls. | ![Media](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/media-v2.png) |
-| **Calendar** | A monthly grid that always fits its rows, with today marked in the accent colour. | ![Calendar](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/calendar.png) |
-| **Weather** | Real-time weather stats powered by wttr.in, including wind speed, humidity, and "feels like" temperature. | ![Weather](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/weather-v2.png) |
-| **Hardware Monitor** | CPU, RAM, GPU, disk and live network throughput, with load bars that turn amber past 75% and red past 90%. | ![Hardware Monitor](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/hardware-monitor.png) |
-| **Game Overlay** | Real-time FPS, CPU, GPU, RAM and disk, sized to whichever metrics you enable. | ![Gamebar](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/gamebar-v2.png) |
-| **Idle View** | A minimal dashboard with your battery status, digital clock, and sleek pagination dots. | ![Idle](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/idle-v2.png) |
-| **Camera Privacy** | Shows a green dot when an app is actively using your webcam. | ![Camera](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/camera-detected-v2.png) |
-| **Mic Privacy** | Shows an orange dot when an app is actively using your microphone. | ![Mic](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/mic-detected-v2.png) |
+| **Media** | Album art, track details, audio visualiser and playback controls, with a switcher when several apps are playing. | ![Media](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/media-v2.png) |
+| **Calendar** | A monthly grid that always fits its rows, with today highlighted. | ![Calendar](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/calendar.png) |
+| **Weather** | Current conditions from wttr.in, including wind, humidity and "feels like". | ![Weather](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/weather-v2.png) |
+| **Hardware monitor** | CPU, RAM, GPU, disk and network speed, with load bars that turn amber past 75% and red past 90%. | ![Hardware Monitor](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/hardware-monitor.png) |
+| **Game overlay** | Live FPS, CPU, GPU, RAM and disk for the metrics you enable. | ![Gamebar](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/gamebar-v2.png) |
+| **Idle view** | Clock, weather and battery in a compact strip. | ![Idle](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/idle-v2.png) |
+| **Camera privacy** | Green dot while an app is using the camera. | ![Camera](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/camera-detected-v2.png) |
+| **Mic privacy** | Orange dot while an app is using the microphone. | ![Mic](https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/mic-detected-v2.png) |
+| **File tray** | Drag files onto the island to park them on a shelf; click to open, or drag them back out. The tray only keeps references, never copies. | |
+| **Clipboard and notifications** | See what you just copied and your latest Windows notifications, with app icons. | |
+| **Quick lookup** | Hotkey search box for definitions and short summaries. | |
 
 ---
 
-## ✨ Core Features
+## Using it
 
-- **Hardware Privacy Indicators:** A pulsing orange dot appears when your microphone is active, and a green dot when your camera is in use. Rate-limited polling ensures absolutely no CPU drain.
-- **High-Res Clipboard & Notifications:** Instantly see what you copied or your latest Windows notifications, featuring crisp, high-fidelity 64px app icons extracted directly from system executables.
-- **360Hz+ Dynamic Fluid Animations:** Ultra-smooth resizing and splitting with native support for high refresh rate monitors (up to 360Hz/500Hz+) and zero idle CPU drain.
-- **Eight Curated Themes:** Obsidian, Graphite, Slate, Nord, Evergreen, Espresso, Plum and a light Porcelain, all switchable from the right-click menu's Theme submenu — or dial in your exact hex colors.
-- **Clean Flat Material:** Surfaces are built from soft downward depth shading, a drop shadow, and an accent wash tinted live from your album art. No rim lighting, no glass highlights, no outlined cards — nothing traces a bright line along an edge.
-- **Real Blur & Acrylic Backdrop:** Optionally paint genuine Windows blur or frosted acrylic behind the island so your desktop shows through it, exactly like the system's own surfaces.
-- **Translucent Backgrounds:** Hex colors accept an alpha channel (`#RRGGBBAA`), so you can make the island see-through while keeping text and icons perfectly crisp.
-- **Your Language:** The island's own labels follow your Windows display language across 12 languages, or you can pick one explicitly.
-- **File Tray:** Drag any file onto the island to park it on a shelf, then click to open it. You can now drag files back out into any folder or app, and remove them one by one. The island itself only references files, it never copies or moves them.
-- **Lyrics on the Collapsed Island:** Switch on "Show lyrics on collapsed island" from the right-click menu and the pill widens to show the current line as it's sung, sliding in with every new line. When there are no synced lyrics it shows the song title instead.
-- **Quick Lookup:** Press **Ctrl+Alt+Space** to open a search box right on the island. Type a word or phrase, press Enter, and get a definition or a short summary. Your clipboard text and recent searches are one click away.
-- **Lyrics Sync Offset:** Nudge lyric timing in milliseconds when lyrics feel early or late, with a separate value for Bluetooth audio output that is picked automatically from your default audio device. Set it in Mod Settings or from the right-click menu's "Lyrics sync" submenu.
-- **Typography & Clock Control:** Scale all island text independently of the island's size, choose 12- or 24-hour time, show seconds, and set a custom date pattern — including CJK forms like `yyyy年MM月dd日`.
-
----
-
-## ⚙️ Usage & Settings
-
-- **Hover & Scroll:** Hover over the island to seamlessly expand it. Use your mouse scroll wheel to swipe between the Media, Calendar, Weather, Hardware Monitor, File Tray, and Lyrics tabs.
-- **File Tray:** Enable the File Tray module, then drag files onto the island. It jumps to the shelf to confirm the drop. Click a row to open that file, drag a row out to drop the file into any folder or app, or press the small ✕ on a row to remove just that file. The bin button in the header clears the whole shelf.
-- **Lyrics on the Collapsed Island:** Right-click the island and tick "Show lyrics on collapsed island". This choice is remembered across restarts. Long lines pan across as they are sung.
-- **Cross-Source Media Switching:** If multiple apps are playing media at the same time, you can smoothly swap between their active playback controls directly from the island without opening the apps.
-- **Quick Lookup:** Press the hotkey (default **Ctrl+Alt+Space**, changeable in the **Shortcuts** tab) to open the search box. Type a word or phrase and press Enter. Up/Down picks a row and Esc closes it. With an empty box it suggests your clipboard text and your recent lookups. Results come from Wiktionary and Wikipedia, with dictionaryapi.dev as a backup. Nothing is sent anywhere until you press Enter, and recent lookups are kept in memory only. Turn it off under Modules > "Quick Lookup (hotkey)".
-- **Right-Click Menu:** Right-click the island to access Theme presets, Transparency settings, collapsed-island lyrics, and to pin the island open.
-- **⚠️ Right-click choices are per-session:** The right-click menu is a quick way to try things out, not a place to configure the mod. **Theme**, **shape style** (Pill / Notch / Windows 11) and **pin open** are all re-applied from your Windhawk settings whenever the mod restarts — so a reboot, a mod update, or toggling the mod off and on will discard them. Anything you want to keep, set in the **Mod Settings** tab instead. (Transparency and Expand-on-hover do persist, but the settings tab is still the reliable place for them.)
-- **Windhawk Settings:** Visit the Mod Settings tab to change the island's Position, Size Scale, Refresh Rate (Target FPS), Animation Style (Smooth/Default/Bouncy/Snappy), Animation Speed, and toggle specific modules. You can also perfectly align the island using the `Offset X` and `Offset Y` settings, and select exactly which monitor the island should appear on (including a "Follow Mouse" mode!).
-- **Notifications:** Windows must allow apps to read notifications: turn on **Settings > Privacy & security > Notifications > "Let apps access your notifications"**. Without that permission Windows denies the listener and the module stays silent. Nothing needs to be added to the process inclusion list; the island runs in its own process and reads notifications from there.
-- **Quick Hide/Show:** Right-click the island and choose "Hide Island" to collapse it completely — CPU usage drops to ~0% while hidden since the mod fully parks its render thread. Bring it back instantly with the configurable hotkey (default **Ctrl+Alt+D**, changeable in the **Shortcuts** settings tab). Because a hidden island can't be right-clicked, the hotkey is the *only* way back once hidden — if you turn the hotkey off while hidden, re-enable it (or disable the mod) from Windhawk's settings.
+- **Hover and scroll.** Hover to expand, scroll to switch dashboards. Right-click
+  for the menu: Theme, Position, transparency, collapsed lyrics, pin open, hide.
+- **Settings.** Mod Settings is the reliable place to configure the island:
+  position, size, refresh rate, animation style, modules, colors, fonts, clock
+  format and which monitor it appears on (including follow-the-mouse). Some
+  right-click choices, such as theme, shape and pin, are re-applied from Mod
+  Settings when the mod restarts, so set anything you want to keep there.
+- **Lyrics.** Synced lyrics come from LRCLIB. They show in the expanded island
+  and, if you turn on "Show lyrics on collapsed island" and leave "full title"
+  off, on the collapsed pill. A sync offset (with a separate value for Bluetooth
+  audio) is in Mod Settings and the right-click menu.
+- **Quick lookup.** Press **Ctrl+Alt+Space** (changeable under Shortcuts), type
+  a word or phrase and press Enter. Results come from Wiktionary and Wikipedia.
+  Nothing is sent until you press Enter.
+- **Hide and show.** Right-click and choose "Hide Island", then bring it back
+  with **Ctrl+Alt+D** (changeable under Shortcuts). While hidden it uses almost
+  no CPU. If the hotkey is already used by another program, change it in
+  Shortcuts.
+- **Notifications.** Windows must allow apps to read notifications: turn on
+  **Settings > Privacy & security > Notifications > "Let apps access your
+  notifications"**. The island waits about 30 seconds after starting before it
+  connects.
 
 ---
 
-## 💾 Lyrics Cache
+## Lyrics cache
 
-**Why it matters:** instant lyrics, less load on the free LRCLIB server, tiny disk footprint, and you can wipe it anytime.
+Lyrics are cached on your PC so they appear instantly and the free LRCLIB server
+gets less load.
 
-- **Source:** lyrics come from [LRCLIB](https://lrclib.net), a free open-source lyrics database.
 - **Where:** `%LOCALAPPDATA%\DynamicIslandForWindows\lyrics`, one small file per song.
-- **What's inside:** the song title, artist, album, duration and the lyric text. It stays on your own PC only. Nothing is uploaded anywhere.
-- **Size & expiry:** capped at 25 MB by default (10 / 25 / 100 MB or Off in settings); the least recently used files are deleted first. Only songs that have lyrics are cached (refreshed after 90 days). Songs without lyrics, and failed requests, are never saved, so they are simply looked up again each time they play.
-- **Turn it off:** Mod Settings > Modules > "Lyrics cache (disk)", or set the size limit to Off. Lyrics are then not read from or written to disk at all.
-- **Clear it:** right-click the island > "Clear lyrics cache" (shows how many songs and how much space it uses).
-- **By hand:** you can delete the folder at any time. It is not removed when the mod is uninstalled.
+- **What is stored:** song title, artist, album, duration and lyric text. Nothing
+  is uploaded.
+- **Size:** capped at 25 MB by default (10, 25 or 100 MB, or off). Least recently
+  used files are removed first. Only songs with lyrics are cached, and they are
+  refreshed after 90 days.
+- **Turn it off:** Mod Settings > Modules > "Lyrics cache (disk)".
+- **Clear it:** right-click the island > "Clear lyrics cache".
 
 ---
 
-## 📝 Feedback & Credits
+## Feedback
 
-### Feedback / Support / Bug Reports
-- Please use [Windhawk Mods Issues](https://github.com/ramensoftware/windhawk-mods/issues) or [dynamic-island-for-windows issues](https://github.com/devcode90/dynamic-island-for-windows/issues) to report bugs, request features, or share feedback.
-- Clear descriptions, screenshots, or steps to reproduce help improve fixes and updates.
-- Suggestions for UI/UX or new integrations are always welcome.
+Report problems, with your Windows version and a screenshot if you can, at
+https://github.com/hackelite01/windhawk-dynamic-island-plus/issues
 
-### Credits
-- **[Sarthak Singh (sarthakaksh) @GitHub](https://github.com/sarthakaksh)**: Major feature overhaul including smoothing animations, right-click focus timer, lyrics for songs, quick lookup, Cross-Source Media Switching, hover clock, robust media controls, zero-CPU instant hide shortcut, Bluetooth battery integration, image clipboard thumbnails, and full-screen autohide fixes.
-- **[ciizerr @GitHub](https://github.com/ciizerr)**: Improved the UI by refining layout alignment, fixing dashboard scaling, and enhancing calendar and weather module integration.
-- **[ChrisSch-dev @GitHub](https://github.com/ChrisSch-dev)**: Added album title support, word wrapping for weather descriptions, sleep resume fixes, and various performance/movement stability improvements.
-- **[thevioletto @GitHub](https://github.com/thevioletto)**: Added custom font support, Windows Do Not Disturb integration and status alerts, improved album art color sampling, reorganized settings, and addressed various UI/media edge cases.
-- **[David Ravelo (DavidRaveloU) @GitHub](https://github.com/DavidRaveloU)**: Added selectable audio spectrum styles with a live frequency analyzer, new progress bar styles, optional track-change animations for the title, cover flip, playback controls and pill cover spin, an optional clock in the collapsed media pill, and a brightness slider flyout.
-- **[Retr0dev-jpg @GitHub](https://github.com/Retr0dev-jpg)**: Event-driven volume flyout with animated bar and default device switching, plus a calendar that follows the Windows locale for weekday initials and first day of the week (with a Monday/Sunday override).
+---
 
-### 🤝 Contributing
-We love community contributions! To ensure high-quality updates, please follow these rules:
-1. **Fork & Branch:** Fork the repository and apply your feature or fix.
-2. **Respect Existing Features:** Do not outright remove or break other people's features unless fully explained why in your PR. You are highly encouraged to refine and improve existing features!
-3. **Credit Yourself:** After completing your feature, add your name and a short summary of your contribution to the **Credits** section in both the Mod UI here and the GitHub `README.md`!
+## Credits
 
+Dynamic Island Plus is built on
+[Dynamic Island for Windows](https://github.com/devcode90/Dynamic-Island-for-Windows)
+by **devcode90** (Himanshu), released under the MIT License. The island itself,
+its rendering and most of its modules come from that project and its
+contributors:
+
+- **[Sarthak Singh (sarthakaksh)](https://github.com/sarthakaksh)**: smoothing animations, focus timer, lyrics, quick lookup, cross-source media switching, hover clock, media controls, instant hide shortcut, Bluetooth battery, image clipboard thumbnails and full-screen auto-hide fixes.
+- **[ciizerr](https://github.com/ciizerr)**: layout alignment, dashboard scaling, calendar and weather integration.
+- **[ChrisSch-dev](https://github.com/ChrisSch-dev)**: album title support, weather text wrapping, sleep-resume fixes, performance and stability work.
+- **[thevioletto](https://github.com/thevioletto)**: custom fonts, Do Not Disturb integration, album art color sampling, settings reorganisation.
+- **[David Ravelo (DavidRaveloU)](https://github.com/DavidRaveloU)**: audio spectrum styles, progress bar styles, track-change animations, collapsed-pill clock, brightness flyout.
+- **[Retr0dev-jpg](https://github.com/Retr0dev-jpg)**: volume flyout with default device switching, locale-aware calendar.
+
+The themes added in Plus, the Position menu, the battery strip, the
+auto-expand duration and the full-title option are by **hackelite01**.
 */
 // ==/WindhawkModReadme==
 
@@ -410,6 +429,15 @@ We love community contributions! To ensure high-quality updates, please follow t
   - MediaAutoExpand: false
     $name: Auto-expand on track change
     $description: Automatically expand the island when a new song or video starts playing. If disabled, album art updates smoothly in the collapsed pill without unprompted expansion.
+  - MediaAutoExpandSeconds: 5
+    $name: Auto-expand duration (seconds)
+    $description: How long the island stays expanded after a track change, when Auto-expand on track change is on. 1 to 30 seconds.
+  - CollapsedFullTitle: false
+    $name: Show the full title on the collapsed pill
+    $description: Always shows the song title on the collapsed media pill and widens the pill to fit the whole title instead of scrolling it. While this is on, lyrics no longer replace the title on the collapsed pill (lyrics still show in the expanded island).
+  - CollapsedTitleMaxWidth: 520
+    $name: Collapsed pill maximum width
+    $description: Widest the collapsed pill may grow when the full title is shown, in pixels at 100% size (320 to 800). Longer titles scroll.
   - MediaPillClock: false
     $name: Show clock in the collapsed media pill
     $description: While media is playing, the collapsed pill also shows the current time on the left, separated from the album cover by a thin divider. Hovering still opens the normal player. Uses the same 12h/24h and seconds options as the clock below. Off by default.
@@ -425,6 +453,9 @@ We love community contributions! To ensure high-quality updates, please follow t
   - Battery: true
     $name: Battery module
     $description: Shows an alert when your laptop battery is running low.
+  - BatteryInIdle: true
+    $name: Show battery in the idle strip
+    $description: Adds the battery percentage (with a lightning bolt while charging) next to the clock and weather when the island is collapsed. Only shown on devices that have a battery.
   - BluetoothIndicator: true
     $name: Bluetooth connect/disconnect indicator
     $description: Shows a card with the device name, category icon, and battery level (if available) when a Bluetooth device connects or disconnects.
@@ -1046,13 +1077,6 @@ static constexpr UINT kNudgeUpMenuId = 97;
 static constexpr UINT kNudgeDownMenuId = 98;
 static constexpr int kNudgeStepPx = 20;
 
-// Alt + left-drag moves the island. While a drag is live the nudge lives in these
-// atomics (LoadSettings prefers them), and it is written to the stored values
-// once when the button is released.
-static std::atomic<bool> g_posDragActive{false};
-static std::atomic<int> g_posDragNudgeX{0};
-static std::atomic<int> g_posDragNudgeY{0};
-
 enum class AccentMode {
     Auto,
     System,
@@ -1231,9 +1255,13 @@ struct Settings {
     float animationSpeed = 1.0f;
     bool media = true;
     bool mediaAutoExpand = false;
+    float mediaAutoExpandSeconds = 5.0f;   // Dynamic Island Plus (#99)
+    bool collapsedFullTitle = false;       // Dynamic Island Plus (#99)
+    float collapsedTitleMaxWidth = 520.0f; // Dynamic Island Plus (#99)
     bool clipboard = true;
     bool statusCountdownProgress = false;
     bool battery = true;
+    bool batteryInIdle = true;   // Dynamic Island Plus: battery % in the collapsed idle strip
     bool progress = true;
     bool volume = true;
     bool brightness = true;
@@ -1417,6 +1445,7 @@ struct ClipboardSnapshot {
 };
 
 struct BatterySnapshot {
+    bool present = false;   // Dynamic Island Plus: this device has a battery
     bool active = false;
     bool low = false;
     bool charging = false;
@@ -1424,6 +1453,15 @@ struct BatterySnapshot {
     DWORD secondsRemaining = BATTERY_LIFE_UNKNOWN;
     double expiresAt = 0.0;
 };
+
+// Dynamic Island Plus: text for the battery slot in the idle strip. Used by both
+// the measuring and the painting code so the reserved width matches what is drawn.
+inline std::wstring IdleBatteryLabel(const BatterySnapshot& battery) {
+    wchar_t label[32] = {};
+    swprintf_s(label, L"%s %d%%", battery.charging ? L"⚡" : L"\U0001F50B",
+               battery.percent);
+    return label;
+}
 
 struct ProgressSnapshot {
     bool active = false;
@@ -2960,6 +2998,11 @@ void LoadSettings() {
 
     next.media = Wh_GetIntSetting(L"Modules.Media") != 0;
     next.mediaAutoExpand = Wh_GetIntSetting(L"Modules.MediaAutoExpand") != 0;
+    next.mediaAutoExpandSeconds =
+        static_cast<float>(Clamp(Wh_GetIntSetting(L"Modules.MediaAutoExpandSeconds"), 1, 30));
+    next.collapsedFullTitle = Wh_GetIntSetting(L"Modules.CollapsedFullTitle") != 0;
+    next.collapsedTitleMaxWidth =
+        static_cast<float>(Clamp(Wh_GetIntSetting(L"Modules.CollapsedTitleMaxWidth"), 320, 800));
     next.volume = Wh_GetIntSetting(L"Modules.Volume") != 0;
     if (!next.volume) {
         std::lock_guard lock(g_stateMutex);
@@ -2975,6 +3018,7 @@ void LoadSettings() {
     next.statusCountdownProgress = Wh_GetIntSetting(L"Modules.StatusCountdownProgress") != 0;
 
     next.battery = Wh_GetIntSetting(L"Modules.Battery") != 0;
+    next.batteryInIdle = Wh_GetIntSetting(L"Modules.BatteryInIdle") != 0;
     next.progress = Wh_GetIntSetting(L"Modules.Progress") != 0;
     next.capsLock = Wh_GetIntSetting(L"Modules.CapsLock") != 0;
     next.timerEnabled = Wh_GetIntSetting(L"Modules.TimerModule") != 0;
@@ -3186,9 +3230,8 @@ void LoadSettings() {
     }
     next.autoDpiScale = Wh_GetIntSetting(L"Appearance.AutoDpiScale") != 0;
     // The right-click "Move" nudges are added on top of the configured offsets.
-    const bool dragLive = g_posDragActive.load();
-    const int nudgeX = dragLive ? g_posDragNudgeX.load() : Wh_GetIntValue(kNudgeXValueName, 0);
-    const int nudgeY = dragLive ? g_posDragNudgeY.load() : Wh_GetIntValue(kNudgeYValueName, 0);
+    const int nudgeX = Wh_GetIntValue(kNudgeXValueName, 0);
+    const int nudgeY = Wh_GetIntValue(kNudgeYValueName, 0);
     next.offsetX = Wh_GetIntSetting(L"Appearance.OffsetX") + nudgeX;
     next.offsetY = Wh_GetIntSetting(L"Appearance.OffsetY") + nudgeY;
     next.separateExpandedOffsetY = Wh_GetIntSetting(L"Appearance.SeparateExpandedOffsetY") != 0;
@@ -8342,6 +8385,9 @@ void UpdateBatterySnapshot() {
 
         g_state.battery.charging = newCharging;
         g_state.battery.percent = newPercent;
+        // BatteryFlag 128 = no system battery; 255 percent = status unknown.
+        g_state.battery.present = (status.BatteryFlag != 128 && status.BatteryFlag != 255 &&
+                                   status.BatteryLifePercent != 255);
         g_state.battery.secondsRemaining = status.BatteryLifeTime;
         g_state.battery.low = (!newCharging && newPercent <= 20);
 
@@ -9293,6 +9339,8 @@ void CaptureClipboard(HWND hwnd) {
     }
 
     std::wstring text = ReadClipboardText(hwnd);
+    Wh_Log(L"Clipboard changed: text length=%d, owner='%s'", static_cast<int>(text.size()),
+           ownerTitle);
     if (!text.empty()) {
         constexpr size_t maxChars = 96;
         std::replace(text.begin(), text.end(), L'\r', L' ');
@@ -11523,7 +11571,9 @@ struct MarqueeLayoutCache {
 struct IdleStripMetrics {
     float clockWidth = 0.0f;
     float weatherWidth = 0.0f;
+    float batteryWidth = 0.0f;
     bool hasWeather = false;
+    bool hasBattery = false;
     bool hasPrivacy = false;
     float totalWidth = IdleStripLayout::kMinWidth;
 };
@@ -11592,7 +11642,10 @@ constexpr float kCollapsedLyricsWidth = 320.0f;
 bool CollapsedLyricsActive(const SharedState& state, const Settings& settings) {
     // Stays wide for as long as media is available. If there are no lyrics to
     // show, DrawCollapsedLyrics shows the media title instead.
-    return settings.collapsedLyrics && settings.media && state.media.available;
+    // Dynamic Island Plus: "full title" also switches the pill into this mode;
+    // it then always shows the title and never the lyrics.
+    return (settings.collapsedLyrics || settings.collapsedFullTitle) && settings.media &&
+           state.media.available;
 }
 
 // One pre-built lyric line. Built once when the line changes, then reused every
@@ -11920,6 +11973,12 @@ class Renderer {
                 MeasureTextWidthCached(WidestDigitForm(label), fmt, idleWeatherWidthCache_);
         }
 
+        metrics.hasBattery = settings.batteryInIdle && state.battery.present;
+        if (metrics.hasBattery) {
+            metrics.batteryWidth = MeasureTextWidthCached(
+                WidestDigitForm(IdleBatteryLabel(state.battery)), fmt, idleBatteryWidthCache_);
+        }
+
         metrics.hasPrivacy =
             (state.system.micActive && settings.privacyDots && settings.privacyDotsMic) ||
             (state.system.cameraActive && settings.privacyDots && settings.privacyDotsCam);
@@ -11928,6 +11987,10 @@ class Renderer {
         if (metrics.hasWeather) {
             total += IdleStripLayout::kSlotGap * 2.0f + IdleStripLayout::kDividerWidth +
                      metrics.weatherWidth;
+        }
+        if (metrics.hasBattery) {
+            total += IdleStripLayout::kSlotGap * 2.0f + IdleStripLayout::kDividerWidth +
+                     metrics.batteryWidth;
         }
         if (metrics.hasPrivacy) {
             total += IdleStripLayout::kPrivacyReserve;
@@ -11967,6 +12030,18 @@ class Renderer {
         return metrics;
     }
 
+    // Dynamic Island Plus (#99): content-space width the collapsed pill needs to
+    // show the whole song title, with room for the cover on the left and the
+    // visualiser on the right. Returns 0 when there is nothing to measure.
+    float MeasureCollapsedTitleWidth(const SharedState& state) {
+        std::wstring title = state.media.title;
+        if (title.empty()) title = state.media.sourceName;
+        if (title.empty()) return 0.0f;
+        constexpr float kTitleSideRoom = 130.0f;  // cover + visualiser + gaps
+        return MeasureTextWidthCached(title, textFormat_.Get(), collapsedTitleWidthCache_) +
+               kTitleSideRoom;
+    }
+
    private:
     // Keyed on the string alone. EnsureTextFormats invalidates both caches
     // whenever it rebuilds the formats, so a cached width can never outlive the
@@ -11979,6 +12054,8 @@ class Renderer {
     };
     TextWidthCache idleClockWidthCache_;
     TextWidthCache idleWeatherWidthCache_;
+    TextWidthCache idleBatteryWidthCache_;
+    TextWidthCache collapsedTitleWidthCache_;
 
     float MeasureTextWidthCached(const std::wstring& text, IDWriteTextFormat* fmt,
                                  TextWidthCache& cache) {
@@ -12082,6 +12159,8 @@ class Renderer {
         // width measured against the old ones is stale.
         idleClockWidthCache_.valid = false;
         idleWeatherWidthCache_.valid = false;
+        idleBatteryWidthCache_.valid = false;
+        collapsedTitleWidthCache_.valid = false;
 
         textFormat_ = nullptr;
         smallTextFormat_ = nullptr;
@@ -15040,6 +15119,11 @@ class Renderer {
                                IdleStripLayout::kDividerWidth) * scale +
                               idleMetrics.weatherWidth;
             }
+            if (idleMetrics.hasBattery) {
+                blockWidth += (IdleStripLayout::kSlotGap * 2.0f +
+                               IdleStripLayout::kDividerWidth) * scale +
+                              idleMetrics.batteryWidth;
+            }
 
             // Centre the block in whatever room the pill currently has. Mid-spring
             // the rect is wider or narrower than the natural width, and clamping
@@ -15082,6 +15166,33 @@ class Renderer {
                     D2D1::RectF(slotX, rect.top, slotX + idleMetrics.weatherWidth, rect.bottom);
                 target_->DrawTextW(weatherLabel, static_cast<UINT32>(wcslen(weatherLabel)), idleFmt,
                                    wRect, textBrush_.Get(), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+                slotX += idleMetrics.weatherWidth;
+            }
+
+            // Dynamic Island Plus: battery slot after the weather, with its own divider.
+            if (idleMetrics.hasBattery) {
+                slotX += IdleStripLayout::kSlotGap * scale;
+
+                ComPtr<ID2D1SolidColorBrush> batteryDivider;
+                target_->CreateSolidColorBrush(
+                    WithAlpha(material_.hairline, material_.hairline.a * settingsOpacity_),
+                    &batteryDivider);
+                if (batteryDivider) {
+                    const float divW = IdleStripLayout::kDividerWidth * scale;
+                    const float divTop = rect.top + IdleStripLayout::kDividerInsetY * scale;
+                    const float divBottom = rect.bottom - IdleStripLayout::kDividerInsetY * scale;
+                    target_->FillRoundedRectangle(
+                        D2D1::RoundedRect(D2D1::RectF(slotX, divTop, slotX + divW, divBottom),
+                                          divW * 0.5f, divW * 0.5f), batteryDivider.Get());
+                }
+                slotX += (IdleStripLayout::kDividerWidth + IdleStripLayout::kSlotGap) * scale;
+
+                const std::wstring batteryLabel = IdleBatteryLabel(state.battery);
+                const D2D1_RECT_F bRect =
+                    D2D1::RectF(slotX, rect.top, slotX + idleMetrics.batteryWidth, rect.bottom);
+                target_->DrawTextW(batteryLabel.c_str(), static_cast<UINT32>(batteryLabel.size()),
+                                   idleFmt, bRect, textBrush_.Get(),
+                                   D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
             }
             textBrush_->SetOpacity(1.0f);
 
@@ -16791,7 +16902,9 @@ class Renderer {
         // (still loading, not found, unsynced). Once lyrics are usable, the intro
         // and instrumental gaps show the note glyph, as before.
         constexpr int kTitleKey = -3;  // distinct from idx == -1 (before the first line)
-        const bool showTitle = !lyricsUsable;
+        // Dynamic Island Plus: with "full title" on, the title always wins and
+        // lyrics no longer replace it in the collapsed pill.
+        const bool showTitle = !lyricsUsable || g_settings.collapsedFullTitle;
         const int showIdx = showTitle ? kTitleKey : idx;
 
         std::wstring fallback = state.media.title;
@@ -21613,66 +21726,7 @@ void StartFileTrayDrag(const std::wstring& path) {
     }
 }
 
-// Dynamic Island Plus: finish an Alt+drag move by saving the final nudge.
-void EndPositionDrag() {
-    if (!g_posDragActive.load()) {
-        return;
-    }
-    Wh_SetIntValue(kNudgeXValueName, g_posDragNudgeX.load());
-    Wh_SetIntValue(kNudgeYValueName, g_posDragNudgeY.load());
-    g_posDragActive = false;
-    LoadSettings();
-    g_layoutDirty = true;
-}
-
 LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    // Alt + left-drag move (Dynamic Island Plus). Checked before every other mouse
-    // handler and a no-op unless Alt is held, so normal clicks behave as before.
-    static POINT s_posDragStart = {0, 0};
-    static int s_posDragStartNudgeX = 0;
-    static int s_posDragStartNudgeY = 0;
-    static ULONGLONG s_posDragLastApply = 0;
-    if (msg == WM_LBUTTONDOWN && (GetKeyState(VK_MENU) & 0x8000)) {
-        GetCursorPos(&s_posDragStart);
-        s_posDragStartNudgeX = Wh_GetIntValue(kNudgeXValueName, 0);
-        s_posDragStartNudgeY = Wh_GetIntValue(kNudgeYValueName, 0);
-        g_posDragNudgeX = s_posDragStartNudgeX;
-        g_posDragNudgeY = s_posDragStartNudgeY;
-        g_posDragActive = true;
-        SetCapture(hwnd);
-        return 0;
-    }
-    if (g_posDragActive.load()) {
-        if (msg == WM_MOUSEMOVE) {
-            // Throttled to roughly 60 updates per second.
-            const ULONGLONG now = GetTickCount64();
-            if (now - s_posDragLastApply >= 16) {
-                s_posDragLastApply = now;
-                POINT cur;
-                GetCursorPos(&cur);
-                g_posDragNudgeX = s_posDragStartNudgeX + (cur.x - s_posDragStart.x);
-                g_posDragNudgeY = s_posDragStartNudgeY + (cur.y - s_posDragStart.y);
-                LoadSettings();
-            }
-            return 0;
-        }
-        if (msg == WM_LBUTTONUP) {
-            POINT cur;
-            GetCursorPos(&cur);
-            g_posDragNudgeX = s_posDragStartNudgeX + (cur.x - s_posDragStart.x);
-            g_posDragNudgeY = s_posDragStartNudgeY + (cur.y - s_posDragStart.y);
-            if (GetCapture() == hwnd) {
-                ReleaseCapture();
-            }
-            EndPositionDrag();
-            return 0;
-        }
-        if (msg == WM_CAPTURECHANGED && reinterpret_cast<HWND>(lParam) != hwnd) {
-            EndPositionDrag();
-            return 0;
-        }
-    }
-
     static POINT s_touchStart = {0, 0};
     static ULONGLONG s_touchStartTime = 0;
     static bool s_trayPressActive = false;   // left button went down on a File Tray row
@@ -21868,6 +21922,8 @@ LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
 
         case WM_CLIPBOARDUPDATE:
+            Wh_Log(L"WM_CLIPBOARDUPDATE received, clipboard module %s",
+                   g_settings.clipboard ? L"on" : L"OFF");
             if (g_settings.clipboard) {
                 CaptureClipboard(hwnd);
             }
@@ -22925,7 +22981,8 @@ DWORD WINAPI RenderThreadProc(void*) {
                                        primary.kind == IslandKind::Media &&
                                        snapshot.media.playing &&
                                        !snapshot.media.title.empty() &&
-                                       (now - snapshot.media.titleChangedAt < 5.0);
+                                       (now - snapshot.media.titleChangedAt <
+                                        static_cast<double>(g_settings.mediaAutoExpandSeconds));
 
         bool isTransientAlert = (primary.kind == IslandKind::Clipboard ||
                                  primary.kind == IslandKind::Notification ||
@@ -23081,7 +23138,16 @@ DWORD WINAPI RenderThreadProc(void*) {
                     : 0.0f;
                 if (CollapsedLyricsActive(snapshot, g_settings)) {
                     // Collapsed but carrying lyrics: wider pill, same height.
-                    primary.width = (kCollapsedLyricsWidth + clockSection) * g_settings.sizeScale;
+                    float pillContentWidth = kCollapsedLyricsWidth;
+                    if (g_settings.collapsedFullTitle) {
+                        // Dynamic Island Plus (#99): grow to fit the whole title.
+                        const float titleNeeded = renderer.MeasureCollapsedTitleWidth(snapshot);
+                        if (titleNeeded > 0.0f) {
+                            pillContentWidth = Clamp(titleNeeded, kCollapsedLyricsWidth,
+                                                     g_settings.collapsedTitleMaxWidth);
+                        }
+                    }
+                    primary.width = (pillContentWidth + clockSection) * g_settings.sizeScale;
                 } else if (g_settings.mediaPillClock) {
                     primary.width = (MediaPillLayout::kBaseWidth + clockSection) * g_settings.sizeScale;
                 }
