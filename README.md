@@ -23,17 +23,29 @@ clipboard, battery and more.
   to a maximum width you set. While on, lyrics no longer replace the title on the
   collapsed pill. Both media options answer issue #99 of the original project.
 
-## What is unchanged
+## What is the original code
 
-Everything else is the original code. The only edits to existing code are:
+The base is the development (1.4.0) code of the original project, from its main
+branch. The catalog's merged version is 1.3.1, so this includes features that
+were never merged there: lyrics with a disk cache, Quick Lookup, File Tray
+persistence, cross-source media switching and the volume flyout. Edits to that
+code:
 
 - the theme submenu's command ids moved from 20.. to 70.., so the longer theme
   list does not overlap the timer and tray menu commands;
-- two small hooks in settings loading so the saved position and nudges are
-  applied;
+- hooks in settings loading so the saved position and nudges are applied, are
+  cleared when Position or Offset settings change, and keep the island on screen;
 - a battery slot added to the idle strip's width measuring and painting code;
 - the fixed 5 second auto-expand window now reads a setting, and the collapsed
-  media pill's width can follow the title's length.
+  media pill's width can follow the title's length;
+- network and data: lyrics are off by default, no plain-HTTP weather fallback,
+  this mod's own User-Agent, request timeouts, range-checked weather values, and
+  the lyrics cache and File Tray data stored in this mod's own Windhawk storage
+  folder (so they do not touch the original mod's data);
+- Quick Lookup no longer uses `AttachThreadInput`; clipboard content that apps
+  mark as private (password managers) is skipped; the render thread sizes from a
+  settings copy; two per-frame storage reads are cached; the weather download loop
+  can no longer spin.
 
 ## Install
 1. Open Windhawk and choose **Create a new mod**.
@@ -57,7 +69,7 @@ connects to notifications.
 ## Credits
 Dynamic Island Plus is built on
 [Dynamic Island for Windows](https://github.com/devcode90/Dynamic-Island-for-Windows)
-v1.3.1 by **devcode90**, used under the MIT License, together with the work of
+(development code, 1.4.0) by **devcode90**, used under the MIT License, together with the work of
 its contributors listed in the mod's own readme. The themes, Position menu,
 battery strip, auto-expand duration and full-title option added here are by
 **hackelite01**.

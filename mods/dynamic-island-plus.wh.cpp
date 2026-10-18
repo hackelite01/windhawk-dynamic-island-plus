@@ -10,21 +10,31 @@
 // @license         MIT
 // ==/WindhawkMod==
 
-// Dynamic Island Plus is based on "Dynamic Island for Windows" version 1.3.1,
-// Copyright (c) 2026 devcode90, released under the MIT License:
-// https://github.com/devcode90/Dynamic-Island-for-Windows
+// Dynamic Island Plus is based on the development code of "Dynamic Island for
+// Windows" from the main branch of https://github.com/devcode90/Dynamic-Island-for-Windows
+// (the unreleased 1.4.0 code, the same code as ramensoftware/windhawk-mods pull
+// request 6312; the version merged into the Windhawk catalog is 1.3.1).
+// Copyright (c) 2026 devcode90, released under the MIT License.
 //
-// Changes from the original:
+// Changes from that code:
 //  - nine additional theme presets appended to the palette table, with the theme
 //    submenu command ids moved from 20.. to 70.. so the longer list no longer
 //    overlaps the timer and tray menu ids;
 //  - a right-click "Position" submenu (six anchor positions, 20 px nudges and a
-//    reset) that overrides the Position and Offset settings until reset;
+//    reset) that overrides the Position and Offset settings until reset or until
+//    those settings are changed, and keeps the island on screen;
 //  - the collapsed idle strip can show the battery percentage (with a lightning
 //    bolt while charging) after the clock and weather, behind a new setting;
 //  - settings for the auto-expand duration on track change (was a fixed 5 s) and
 //    an option to widen the collapsed media pill to show the full song title
-//    (requested in the original project's issue #99).
+//    (requested in the original project's issue #99);
+//  - network and data handling: lyrics are off by default and say what they send,
+//    there is no plain-HTTP weather fallback, requests carry this mod's own
+//    User-Agent and timeouts, weather values are range-checked, and the lyrics
+//    cache and File Tray data live in this mod's own Windhawk storage folder;
+//  - the Quick Lookup window no longer attaches to another app's input queue,
+//    clipboard content that apps mark as private is not shown, and a few
+//    threading, storage-read and download-loop fixes.
 // Everything else is unchanged.
 //
 // MIT License. Permission is hereby granted, free of charge, to any person
@@ -108,10 +118,19 @@ it to move between them.
   format and which monitor it appears on (including follow-the-mouse). Some
   right-click choices, such as theme, shape and pin, are re-applied from Mod
   Settings when the mod restarts, so set anything you want to keep there.
-- **Lyrics.** Synced lyrics come from LRCLIB. They show in the expanded island
-  and, if you turn on "Show lyrics on collapsed island" and leave "full title"
-  off, on the collapsed pill. A sync offset (with a separate value for Bluetooth
-  audio) is in Mod Settings and the right-click menu.
+- **Lyrics (off by default).** Synced lyrics come from LRCLIB. Turn on the
+  Lyrics module in Mod Settings, or lyrics in the media tab or on the collapsed
+  pill, and the title, artist, album and duration of each new track are sent to
+  lrclib.net. They show in the expanded island and, if you turn on "Show lyrics
+  on collapsed island" and leave "full title" off, on the collapsed pill. A sync
+  offset (with a separate value for Bluetooth audio) is in Mod Settings and the
+  right-click menu.
+- **What goes over the network.** Weather from wttr.in (HTTPS, using your IP
+  location unless you set a city), lyrics from lrclib.net only if you turn
+  lyrics on, and Quick Lookup queries to Wiktionary, Wikipedia and
+  dictionaryapi.dev only when you press Enter in the search box.
+- **Clipboard.** Content that an app marks as private, such as copies from
+  password managers, is not shown.
 - **Quick lookup.** Press **Ctrl+Alt+Space** (changeable under Shortcuts), type
   a word or phrase and press Enter. Results come from Wiktionary and Wikipedia.
   Nothing is sent until you press Enter.
@@ -131,7 +150,9 @@ it to move between them.
 Lyrics are cached on your PC so they appear instantly and the free LRCLIB server
 gets less load.
 
-- **Where:** `%LOCALAPPDATA%\DynamicIslandForWindows\lyrics`, one small file per song.
+- **Where:** a `lyrics` folder inside this mod's own Windhawk storage folder, one
+  small file per song. It is separate from any other mod and is deleted when the
+  mod is removed.
 - **What is stored:** song title, artist, album, duration and lyric text. Nothing
   is uploaded.
 - **Size:** capped at 25 MB by default (10, 25 or 100 MB, or off). Least recently
@@ -174,7 +195,7 @@ auto-expand duration and the full-title option are by **hackelite01**.
 - Appearance:
   - Position: top-center
     $name: Position
-    $description: Where the island should appear on your screen.
+    $description: Where the island should appear on your screen. A position picked from the island's right-click Position menu takes priority over this setting until you choose Reset position there or change Position, Offset X or Offset Y here.
     $options:
       - top-center: Top Center
       - top-left: Top Left
@@ -500,10 +521,10 @@ auto-expand duration and the full-title option are by **hackelite01**.
     $description: Display weather temperature and wind speed in imperial units.
   - MediaTabLyrics: false
     $name: Lyrics in the media tab
-    $description: Shows synced lyrics in a side panel next to the album art and playback controls when the island is expanded on the Media tab. The island is only wider while this is on. Can also be toggled from the right-click menu.
-  - Lyrics: true
+    $description: Shows synced lyrics in a side panel next to the album art and playback controls when the island is expanded on the Media tab. The island is only wider while this is on. Can also be toggled from the right-click menu. Turning this on fetches lyrics from lrclib.net (see the Lyrics module setting for what is sent).
+  - Lyrics: false
     $name: Lyrics module
-    $description: Shows synced lyrics for the current track (fetched from LRCLIB, a free open-source lyrics database) while the island is expanded. Scroll to the Lyrics tab to view them.
+    $description: Shows synced lyrics for the current track while the island is expanded. Scroll to the Lyrics tab to view them. Off by default because it contacts the internet - when on (or when lyrics are switched on in the media tab or the collapsed pill), the title, artist, album and duration of the playing track are sent to lrclib.net, a free open-source lyrics database, for every new track.
   - LyricsVisualizer: true
     $name: Show visualizer in Lyrics tab
     $description: Shows a small live audio waveform next to the Lyrics title while a track is playing.
@@ -524,7 +545,7 @@ auto-expand duration and the full-title option are by **hackelite01**.
     $description: By default the lines above and below the active line are only a faint ghost. Turn this on to make them clearly readable.
   - LyricsCache: true
     $name: Lyrics cache (disk)
-    $description: Instant lyrics, less load on LRCLIB, tiny disk use, clearable anytime. Stored in %LOCALAPPDATA%\DynamicIslandForWindows\lyrics. Turn off to stop all lyrics disk reads and writes.
+    $description: Instant lyrics, less load on LRCLIB, tiny disk use, clearable anytime. Stored in this mod's own Windhawk storage folder, which is deleted when the mod is removed. Turn off to stop all lyrics disk reads and writes.
   - LyricsCacheMaxMB: '25'
     $name: Lyrics cache size limit
     $description: Least recently used files are deleted once the cache grows past this. Off disables the disk cache.
@@ -584,7 +605,7 @@ auto-expand duration and the full-title option are by **hackelite01**.
     $description: 1 to 25. How many files the shelf keeps before the oldest one drops off.
   - FileTrayPersist: true
     $name: File Tray remembers items (disk)
-    $description: Keeps the tray's contents across restarts, in %LOCALAPPDATA%\DynamicIslandForWindows\filetray. Only file paths and pasted text snippets are stored, never copies of your files. Turn off to stop all disk reads and writes and delete the saved list.
+    $description: Keeps the tray's contents across restarts, in this mod's own Windhawk storage folder (deleted when the mod is removed). Only file paths and pasted text snippets are stored, never copies of your files. Turn off to stop all disk reads and writes and delete the saved list.
   - MediaExpandBlocklist: ""
     $name: Never auto-expand for these apps
     $description: 'Comma-separated list of app or site names that should never make the island expand on a track change, while still updating quietly in the collapsed pill. Matched loosely against the media source and title, for example: chrome, tiktok, youtube.'
@@ -1069,6 +1090,13 @@ constexpr bool IsBottomPosition(Position position) {
 static constexpr const wchar_t* kPositionOverrideValueName = L"PositionOverride";  // -1 = follow settings
 static constexpr const wchar_t* kNudgeXValueName = L"PositionNudgeX";
 static constexpr const wchar_t* kNudgeYValueName = L"PositionNudgeY";
+// Mod Settings values (Position, Offset X, Offset Y) as they were when the menu
+// override was made. If they differ on a later load the user has changed those
+// settings, so the override is dropped and Mod Settings win again.
+static constexpr const wchar_t* kPosBasePositionName = L"PositionBasePosition";
+static constexpr const wchar_t* kPosBaseOffsetXName = L"PositionBaseOffsetX";
+static constexpr const wchar_t* kPosBaseOffsetYName = L"PositionBaseOffsetY";
+static constexpr int kPosBaseUnset = 2147483647;
 static constexpr UINT kPositionMenuIdBase = 88;   // 88..93 = the six Position values, in enum order
 static constexpr UINT kPositionResetMenuId = 94;
 static constexpr UINT kNudgeLeftMenuId = 95;
@@ -1076,6 +1104,21 @@ static constexpr UINT kNudgeRightMenuId = 96;
 static constexpr UINT kNudgeUpMenuId = 97;
 static constexpr UINT kNudgeDownMenuId = 98;
 static constexpr int kNudgeStepPx = 20;
+
+// Cached copies of two flags that are stored with Wh_SetIntValue but read on every
+// frame of the render loop. Reading Windhawk storage 60+ times a second means a
+// constant stream of registry (or INI file) reads, so the loop reads these instead.
+// Always change them through the setters below so storage and cache stay equal.
+static std::atomic<bool> g_pinnedExpanded{false};
+static std::atomic<bool> g_gameOverlayPinned{false};
+inline void SetPinnedExpanded(bool pinned) {
+    g_pinnedExpanded = pinned;
+    Wh_SetIntValue(L"PinnedExpanded", pinned ? 1 : 0);
+}
+inline void SetGameOverlayPinned(bool pinned) {
+    g_gameOverlayPinned = pinned;
+    Wh_SetIntValue(L"GameOverlayPinned", pinned ? 1 : 0);
+}
 
 enum class AccentMode {
     Auto,
@@ -1446,6 +1489,7 @@ struct ClipboardSnapshot {
 
 struct BatterySnapshot {
     bool present = false;   // Dynamic Island Plus: this device has a battery
+    bool chargingNow = false;  // battery is actually charging (BatteryFlag & 8); `charging` means on AC power
     bool active = false;
     bool low = false;
     bool charging = false;
@@ -1458,7 +1502,7 @@ struct BatterySnapshot {
 // the measuring and the painting code so the reserved width matches what is drawn.
 inline std::wstring IdleBatteryLabel(const BatterySnapshot& battery) {
     wchar_t label[32] = {};
-    swprintf_s(label, L"%s %d%%", battery.charging ? L"⚡" : L"\U0001F50B",
+    swprintf_s(label, L"%s %d%%", battery.chargingNow ? L"⚡" : L"\U0001F50B",
                battery.percent);
     return label;
 }
@@ -2872,25 +2916,106 @@ void ApplyBackdropRegion(HWND, int, int);   // forward declaration; defined belo
 void NotifyKeyboardThreadSettingChanged();  // forward declaration; defined with the keyboard hook
 
 void ApplyLookupHotkey();  // forward declaration; defined with Quick Lookup
+RECT GetAnchorWorkRect();  // forward declaration; defined with the monitor anchoring
+
+// The Position chosen in Mod Settings (ignoring the right-click menu override).
+Position PositionFromSetting() {
+    const std::wstring position = GetStringSettingCopy(L"Appearance.Position");
+    if (EqualsNoCase(position, L"top-left")) return Position::TopLeft;
+    if (EqualsNoCase(position, L"top-right")) return Position::TopRight;
+    if (EqualsNoCase(position, L"bottom-center")) return Position::BottomCenter;
+    if (EqualsNoCase(position, L"bottom-left")) return Position::BottomLeft;
+    if (EqualsNoCase(position, L"bottom-right")) return Position::BottomRight;
+    return Position::TopCenter;
+}
+
+// Remembers the current Mod Settings position values next to a menu override.
+void RecordPositionOverrideBase() {
+    Wh_SetIntValue(kPosBasePositionName, static_cast<int>(PositionFromSetting()));
+    Wh_SetIntValue(kPosBaseOffsetXName, Wh_GetIntSetting(L"Appearance.OffsetX"));
+    Wh_SetIntValue(kPosBaseOffsetYName, Wh_GetIntSetting(L"Appearance.OffsetY"));
+}
+
+// Removes the right-click Position choice and nudges.
+void ClearPositionOverride() {
+    Wh_SetIntValue(kPositionOverrideValueName, -1);
+    Wh_SetIntValue(kNudgeXValueName, 0);
+    Wh_SetIntValue(kNudgeYValueName, 0);
+}
+
+// Range of total offsets (Mod Settings offset + menu nudge) that keeps at least
+// part of the island on its monitor for the given anchor.
+void GetOffsetBounds(Position pos, bool flushTop, int* minXOut, int* maxXOut, int* minYOut,
+                     int* maxYOut) {
+    const RECT work = GetAnchorWorkRect();
+    const int workW = work.right - work.left;
+    const int workH = work.bottom - work.top;
+    constexpr int kKeepX = 120;   // at least this much of the island stays on screen
+    constexpr int kKeepY = 60;
+
+    int minX, maxX;
+    switch (pos) {
+        case Position::TopLeft:
+        case Position::BottomLeft:
+            minX = -16;
+            maxX = workW - 16 - kKeepX;
+            break;
+        case Position::TopRight:
+        case Position::BottomRight:
+            minX = -(workW - 16 - kKeepX);
+            maxX = 16;
+            break;
+        default:
+            minX = -(workW / 2 - kKeepX / 2);
+            maxX = workW / 2 - kKeepX / 2;
+            break;
+    }
+
+    int minY, maxY;
+    if (IsBottomPosition(pos)) {
+        minY = -(workH - kKeepY - 40);
+        maxY = 36;
+    } else {
+        minY = flushTop ? 0 : -8;
+        maxY = workH - kKeepY - 8;
+    }
+    *minXOut = minX;
+    *maxXOut = maxX;
+    *minYOut = minY;
+    *maxYOut = maxY;
+}
+
+// Keeps a menu-moved island on its monitor.
+void ClampOffsetsToWorkArea(Position pos, bool flushTop, int* offsetX, int* offsetY,
+                            int* offsetYExpanded) {
+    int minX, maxX, minY, maxY;
+    GetOffsetBounds(pos, flushTop, &minX, &maxX, &minY, &maxY);
+    *offsetX = std::clamp(*offsetX, minX, maxX);
+    *offsetY = std::clamp(*offsetY, minY, maxY);
+    *offsetYExpanded = std::clamp(*offsetYExpanded, minY, maxY);
+}
 
 void LoadSettings() {
     Settings next;
 
-    const std::wstring position = GetStringSettingCopy(L"Appearance.Position");
-    if (EqualsNoCase(position, L"top-left")) {
-        next.position = Position::TopLeft;
-    } else if (EqualsNoCase(position, L"top-right")) {
-        next.position = Position::TopRight;
-    } else if (EqualsNoCase(position, L"bottom-center")) {
-        next.position = Position::BottomCenter;
-    } else if (EqualsNoCase(position, L"bottom-left")) {
-        next.position = Position::BottomLeft;
-    } else if (EqualsNoCase(position, L"bottom-right")) {
-        next.position = Position::BottomRight;
-    }
+    const Position settingPosition = PositionFromSetting();
+    next.position = settingPosition;
 
-    // Right-click menu choice wins over the Mod Settings value.
-    const int positionOverride = Wh_GetIntValue(kPositionOverrideValueName, -1);
+    // The right-click Position menu wins over Mod Settings - until Position,
+    // Offset X or Offset Y is changed in Mod Settings, which clears it again.
+    int positionOverride = Wh_GetIntValue(kPositionOverrideValueName, -1);
+    {
+        const bool overrideActive = positionOverride >= 0 ||
+                                    Wh_GetIntValue(kNudgeXValueName, 0) != 0 ||
+                                    Wh_GetIntValue(kNudgeYValueName, 0) != 0;
+        if (overrideActive &&
+            (Wh_GetIntValue(kPosBasePositionName, kPosBaseUnset) != static_cast<int>(settingPosition) ||
+             Wh_GetIntValue(kPosBaseOffsetXName, kPosBaseUnset) != Wh_GetIntSetting(L"Appearance.OffsetX") ||
+             Wh_GetIntValue(kPosBaseOffsetYName, kPosBaseUnset) != Wh_GetIntSetting(L"Appearance.OffsetY"))) {
+            ClearPositionOverride();
+            positionOverride = -1;
+        }
+    }
     if (positionOverride >= 0 && positionOverride <= static_cast<int>(Position::BottomRight)) {
         next.position = static_cast<Position>(positionOverride);
     }
@@ -3443,7 +3568,13 @@ void LoadSettings() {
     next.micDotColor = next.privacyDotsMicHex;
     next.camDotColor = next.privacyDotsCamHex;
 
-    Wh_SetIntValue(L"PinnedExpanded", 0);
+    // A position set from the right-click menu must keep the island on screen.
+    if (positionOverride >= 0 || nudgeX != 0 || nudgeY != 0) {
+        ClampOffsetsToWorkArea(next.position, next.notchStyle || next.borderMergedMode,
+                               &next.offsetX, &next.offsetY, &next.offsetYExpanded);
+    }
+
+    SetPinnedExpanded(false);
 
     // Compare-then-publish under one lock so the change flags describe exactly
     // the transition we are about to commit. Two LoadSettings() calls can run
@@ -6518,14 +6649,21 @@ void PushAudioChunks(BYTE* data, UINT32 frames, WAVEFORMATEX* format) {
     }
 }
 
+// Dynamic Island Plus identifies its own network traffic (weather, lyrics, lookup).
+static constexpr const wchar_t* kPlusUserAgent =
+    L"DynamicIslandPlus/1.0.0 (+https://github.com/hackelite01/windhawk-dynamic-island-plus)";
+
 // --- Weather Fetching Helpers ---
 std::string HttpGet(const wchar_t* host, const wchar_t* path, bool https = true) {
     std::string response;
-    HINTERNET hSession = WinHttpOpen(L"DynamicIsland/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    HINTERNET hSession = WinHttpOpen(kPlusUserAgent, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!hSession) {
         Wh_Log(L"Weather HttpGet: WinHttpOpen failed with error %lu", GetLastError());
         return response;
     }
+    // Resolve, connect, send, receive: a stalled connection (for example after the
+    // PC sleeps) must fail instead of blocking the thread.
+    WinHttpSetTimeouts(hSession, 10000, 10000, 15000, 15000);
 
     HINTERNET hConnect = WinHttpConnect(hSession, host, https ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT, 0);
     if (hConnect) {
@@ -6533,19 +6671,25 @@ std::string HttpGet(const wchar_t* host, const wchar_t* path, bool https = true)
         if (hRequest) {
             if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
                 WinHttpReceiveResponse(hRequest, nullptr)) {
-                DWORD size = 0;
-                DWORD downloaded = 0;
-                do {
-                    if (WinHttpQueryDataAvailable(hRequest, &size) && size > 0) {
-                        std::vector<char> buffer(size + 1);
-                        if (WinHttpReadData(hRequest, buffer.data(), size, &downloaded)) {
-                            buffer[downloaded] = '\0';
-                            response.append(buffer.data());
-                        } else {
-                            Wh_Log(L"Weather HttpGet: WinHttpReadData failed with error %lu", GetLastError());
-                        }
+                constexpr size_t kMaxResponseBytes = 4u * 1024u * 1024u;
+                for (;;) {
+                    // Reset every pass: if the query fails, a stale non-zero size
+                    // must not keep this loop spinning.
+                    DWORD size = 0;
+                    if (!WinHttpQueryDataAvailable(hRequest, &size) || size == 0) {
+                        break;
                     }
-                } while (size > 0);
+                    std::vector<char> buffer(size + 1);
+                    DWORD downloaded = 0;
+                    if (!WinHttpReadData(hRequest, buffer.data(), size, &downloaded)) {
+                        Wh_Log(L"Weather HttpGet: WinHttpReadData failed with error %lu", GetLastError());
+                        break;
+                    }
+                    response.append(buffer.data(), downloaded);
+                    if (response.size() > kMaxResponseBytes) {
+                        break;
+                    }
+                }
             } else {
                 Wh_Log(L"Weather HttpGet: WinHttpSendRequest/ReceiveResponse failed with error %lu", GetLastError());
             }
@@ -6717,17 +6861,16 @@ DWORD WINAPI WeatherThreadProc(void*) {
         }
 
         Wh_Log(L"Weather: Requesting weather from wttr.in/host: wttr.in, path: %s", url.c_str());
+        // HTTPS only: there is no plain-HTTP fallback, so a failed request simply
+        // backs off and tries again later.
         std::string wRes = HttpGet(L"wttr.in", url.c_str(), true);
-        if (wRes.empty()) {
-            Wh_Log(L"Weather: HTTPS request failed, retrying over plain HTTP...");
-            wRes = HttpGet(L"wttr.in", url.c_str(), false);
-        }
 
         bool weatherCommitted = false;
 
         if (!wRes.empty()) {
             Wh_Log(L"Weather: Received response from wttr.in (size: %zu bytes)", wRes.size());
             float temp = 0.0f;
+            bool tempOutOfRange = false;   // implausible value in the response: not committed
             int code = 0;
             std::wstring desc = L"";
             std::wstring windSpeed = L"";
@@ -6770,6 +6913,8 @@ DWORD WINAPI WeatherThreadProc(void*) {
                                 std::vector<wchar_t> wstr(wchars_num);
                                 MultiByteToWideChar(CP_UTF8, 0, valA.c_str(), -1, &wstr[0], wchars_num);
                                 out = wstr.data();
+                                // These values are formatted into small fixed buffers.
+                                if (out.size() > 24) out.resize(24);
                             }
                         }
                     }
@@ -6780,6 +6925,12 @@ DWORD WINAPI WeatherThreadProc(void*) {
                     tempStr += 9;
                     while (*tempStr == ' ' || *tempStr == '\"') tempStr++;
                     sscanf(tempStr, "%f", &temp);
+                    // Range-check before the value reaches any fixed-size buffer: an
+                    // absurd number (or NaN) would not fit in a swprintf_s buffer.
+                    if (!std::isfinite(temp) || temp < -100.0f || temp > 150.0f) {
+                        tempOutOfRange = true;
+                        temp = 0.0f;
+                    }
                 }
                 const char* codeStr = strstr(currentStr, "\"weatherCode\":");
                 if (codeStr) {
@@ -6802,6 +6953,7 @@ DWORD WINAPI WeatherThreadProc(void*) {
                                 std::vector<wchar_t> wstr(wchars_num);
                                 MultiByteToWideChar(CP_UTF8, 0, valA.c_str(), -1, &wstr[0], wchars_num);
                                 desc = wstr.data();
+                                if (desc.size() > 64) desc.resize(64);
                                 while(!desc.empty() && desc.back() == L' ') desc.pop_back();
                             }
                         }
@@ -6820,7 +6972,7 @@ DWORD WINAPI WeatherThreadProc(void*) {
                 // display a confident, wrong "0 degrees".
                 // 0 is not a valid WWO weather code, so it doubles as a
                 // "nothing was parsed" sentinel here.
-                weatherCommitted = (code != 0) || !desc.empty();
+                weatherCommitted = ((code != 0) || !desc.empty()) && !tempOutOfRange;
 
                 std::wstring finalCity = cityOverride.empty() ? cityLabel : cityOverride;
                 if (weatherCommitted) {
@@ -6885,8 +7037,7 @@ DWORD WINAPI WeatherThreadProc(void*) {
 
 // ── Lyrics (LRCLIB, https://lrclib.net) ──────────────────────────────────────
 // OPTIONAL: User-Agent sent to LRCLIB. 
-constexpr wchar_t kLyricsUserAgent[] =
-    L"DynamicIslandForWindows/1.3.1 (https://github.com/devcode90/Dynamic-Island-for-Windows)";
+constexpr const wchar_t* kLyricsUserAgent = kPlusUserAgent;
 
 bool IsUrlSafeChar(unsigned char c) {
     return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
@@ -7250,17 +7401,19 @@ void CountersAdjust(int dCount, int64_t dBytes) {
 }
 
 // ---- cache folder -------------------------------------------------------------
-// %LOCALAPPDATA%\DynamicIslandForWindows\lyrics. Empty if LOCALAPPDATA is unset,
-// in which case the disk layer simply behaves as a permanent miss.
+// <mod storage folder>\lyrics. The mod storage folder is Windhawk's own folder for
+// this mod: it is separate from any other mod and is deleted when the mod is
+// removed. Empty if Windhawk cannot provide it, in which case the disk layer
+// simply behaves as a permanent miss.
 const std::wstring& CacheDir(bool create) {
     static std::wstring dir;
     static bool resolved = false;
     if (!resolved) {
         resolved = true;
         wchar_t base[MAX_PATH] = {};
-        const DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", base, ARRAYSIZE(base));
+        const size_t n = Wh_GetModStoragePath(base, ARRAYSIZE(base));
         if (n > 0 && n < ARRAYSIZE(base)) {
-            dir = std::wstring(base) + L"\\DynamicIslandForWindows\\lyrics";
+            dir = std::wstring(base) + L"\\lyrics";
         }
     }
     if (create && !dir.empty()) {
@@ -8388,6 +8541,7 @@ void UpdateBatterySnapshot() {
         // BatteryFlag 128 = no system battery; 255 percent = status unknown.
         g_state.battery.present = (status.BatteryFlag != 128 && status.BatteryFlag != 255 &&
                                    status.BatteryLifePercent != 255);
+        g_state.battery.chargingNow = g_state.battery.present && (status.BatteryFlag & 8) != 0;
         g_state.battery.secondsRemaining = status.BatteryLifeTime;
         g_state.battery.low = (!newCharging && newPercent <= 20);
 
@@ -8995,14 +9149,16 @@ bool IsDeviceActiveViaRegistry(const wchar_t* capability, std::wstring* outAppNa
         return false;
     };
 
+    // KEY_WOW64_64KEY: the 32-bit windhawk.exe would otherwise read the HKLM
+    // redirected view (WOW6432Node), which does not contain the real entries.
     HKEY hKey;
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, basePath.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, basePath.c_str(), 0, KEY_READ | KEY_WOW64_64KEY, &hKey) == ERROR_SUCCESS) {
         isActive = CheckSubkeys(hKey);
         RegCloseKey(hKey);
     }
 
     if (!isActive) {
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, basePath.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, basePath.c_str(), 0, KEY_READ | KEY_WOW64_64KEY, &hKey) == ERROR_SUCCESS) {
             isActive = CheckSubkeys(hKey);
             RegCloseKey(hKey);
         }
@@ -9038,9 +9194,39 @@ void UpdatePrivacyIndicators() {
     g_state.system.cameraApp = camApp;
 }
 
+// True when the app that put the current content on the clipboard marked it as
+// private (password managers do this), so clipboard monitors must not show or
+// store it. Call with the clipboard open.
+bool ClipboardContentIsPrivate() {
+    static const UINT excludeFormat =
+        RegisterClipboardFormatW(L"ExcludeClipboardContentFromMonitorProcessing");
+    static const UINT historyFormat = RegisterClipboardFormatW(L"CanIncludeInClipboardHistory");
+
+    if (excludeFormat && IsClipboardFormatAvailable(excludeFormat)) {
+        return true;
+    }
+    if (historyFormat && IsClipboardFormatAvailable(historyFormat)) {
+        bool blocked = false;
+        if (HANDLE data = GetClipboardData(historyFormat)) {
+            if (GlobalSize(data) >= sizeof(DWORD)) {
+                if (auto* value = static_cast<const DWORD*>(GlobalLock(data))) {
+                    blocked = (*value == 0);
+                    GlobalUnlock(data);
+                }
+            }
+        }
+        return blocked;
+    }
+    return false;
+}
+
 std::wstring ReadClipboardText(HWND hwnd) {
     std::wstring text;
     if (!OpenClipboard(hwnd)) {
+        return text;
+    }
+    if (ClipboardContentIsPrivate()) {
+        CloseClipboard();
         return text;
     }
 
@@ -9064,6 +9250,10 @@ std::wstring ReadClipboardText(HWND hwnd) {
 // synthesizes CF_BITMAP from those automatically.
 bool ReadClipboardImagePixels(HWND hwnd, BitmapPixels* outPixels, UINT maxDim) {
     if (!outPixels || !OpenClipboard(hwnd)) {
+        return false;
+    }
+    if (ClipboardContentIsPrivate()) {
+        CloseClipboard();
         return false;
     }
 
@@ -9487,9 +9677,8 @@ int LookupRowAtContentPoint(const MediaContentPoint& pt, int rowCount, bool head
 // and add one line to LookupText().
 
 // Wikimedia asks API clients to send a descriptive User-Agent with contact info.
-// Replace the placeholder with your fork's page, like kLyricsUserAgent.
-constexpr wchar_t kLookupUserAgent[] =
-    L"DynamicIslandForWindows/1.3 (https://github.com/devcode90/Dynamic-Island-for-Windows) QuickLookup";
+// Dynamic Island Plus sends its own page, via kPlusUserAgent.
+constexpr const wchar_t* kLookupUserAgent = kPlusUserAgent;
 
 // Bumped for every new request AND when the card is dismissed. A worker only
 // publishes if its id is still current, so a slow reply can never resurrect a card
@@ -10221,16 +10410,15 @@ std::vector<LookupRow> CurrentLookupRows(LookupStatus* status) {
 }
 
 void ForceForeground(HWND hwnd) {
-    HWND fg = GetForegroundWindow();
-    const DWORD fgThread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
-    const DWORD me = GetCurrentThreadId();
-    const bool attached = fgThread && fgThread != me && AttachThreadInput(me, fgThread, TRUE);
+    // No AttachThreadInput: sharing another app's input queue lets a hung app
+    // freeze the island and the other way round. A process that has just handled
+    // the hotkey is allowed to take the foreground; the empty SendInput first
+    // covers the rare cases where Windows would still refuse, without attaching.
+    INPUT input{};
+    SendInput(1, &input, sizeof(INPUT));
     SetForegroundWindow(hwnd);
     BringWindowToTop(hwnd);
     SetFocus(hwnd);
-    if (attached) {
-        AttachThreadInput(me, fgThread, FALSE);
-    }
 }
 
 // The island is WS_EX_NOACTIVATE so it never steals focus. While the search box is
@@ -11140,7 +11328,7 @@ void ShowContextMenu(HWND hwnd, POINT screenPoint) {
         AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(trayMenu), Loc(L"File Tray"));
     }
     AppendMenuW(menu, MF_STRING, 2, L"Pin expanded");
-    AppendMenuW(menu, MF_STRING, 3, Wh_GetIntValue(L"GameOverlayPinned", 0) ? L"Hide game overlay" : L"Show game overlay");
+    AppendMenuW(menu, MF_STRING, 3, g_gameOverlayPinned.load() ? L"Hide game overlay" : L"Show game overlay");
     {
         // g_settings already reflects any right-click override, so it is the
         // source of truth for which style is active.
@@ -11279,12 +11467,14 @@ void ShowContextMenu(HWND hwnd, POINT screenPoint) {
 
     // Dynamic Island Plus: Position submenu commands (88..98).
     if (cmd >= kPositionMenuIdBase && cmd <= kNudgeDownMenuId) {
+        if (cmd != kPositionResetMenuId) {
+            // Remember the Mod Settings values this override sits on top of.
+            RecordPositionOverrideBase();
+        }
         if (cmd < kPositionMenuIdBase + 6) {
             Wh_SetIntValue(kPositionOverrideValueName, static_cast<int>(cmd - kPositionMenuIdBase));
         } else if (cmd == kPositionResetMenuId) {
-            Wh_SetIntValue(kPositionOverrideValueName, -1);
-            Wh_SetIntValue(kNudgeXValueName, 0);
-            Wh_SetIntValue(kNudgeYValueName, 0);
+            ClearPositionOverride();
         } else if (cmd == kNudgeLeftMenuId) {
             Wh_SetIntValue(kNudgeXValueName, Wh_GetIntValue(kNudgeXValueName, 0) - kNudgeStepPx);
         } else if (cmd == kNudgeRightMenuId) {
@@ -11294,7 +11484,28 @@ void ShowContextMenu(HWND hwnd, POINT screenPoint) {
         } else if (cmd == kNudgeDownMenuId) {
             Wh_SetIntValue(kNudgeYValueName, Wh_GetIntValue(kNudgeYValueName, 0) + kNudgeStepPx);
         }
+        if (cmd != kPositionResetMenuId) {
+            // Keep the stored nudge inside what stays on screen, so extra clicks at
+            // the edge do not pile up invisible distance.
+            const int ov = Wh_GetIntValue(kPositionOverrideValueName, -1);
+            const Position pos = (ov >= 0 && ov <= static_cast<int>(Position::BottomRight))
+                                     ? static_cast<Position>(ov)
+                                     : PositionFromSetting();
+            const bool flushTop = !IsBottomPosition(pos) &&
+                                  (g_settings.notchStyle || g_settings.borderMergedMode);
+            int minX, maxX, minY, maxY;
+            GetOffsetBounds(pos, flushTop, &minX, &maxX, &minY, &maxY);
+            const int baseX = Wh_GetIntSetting(L"Appearance.OffsetX");
+            const int baseY = Wh_GetIntSetting(L"Appearance.OffsetY");
+            Wh_SetIntValue(kNudgeXValueName,
+                           std::clamp(Wh_GetIntValue(kNudgeXValueName, 0), minX - baseX, maxX - baseX));
+            Wh_SetIntValue(kNudgeYValueName,
+                           std::clamp(Wh_GetIntValue(kNudgeYValueName, 0), minY - baseY, maxY - baseY));
+        }
+        // Moving the island must not unpin it: LoadSettings clears the pin.
+        const bool pinnedBefore = g_pinnedExpanded.load();
         LoadSettings();
+        SetPinnedExpanded(pinnedBefore);
         return;
     }
 
@@ -11311,10 +11522,10 @@ void ShowContextMenu(HWND hwnd, POINT screenPoint) {
             TriggerNudge();
             break;
         case 2:
-            Wh_SetIntValue(L"PinnedExpanded", Wh_GetIntValue(L"PinnedExpanded", 0) ? 0 : 1);
+            SetPinnedExpanded(!g_pinnedExpanded.load());
             break;
         case 3:
-            Wh_SetIntValue(L"GameOverlayPinned", Wh_GetIntValue(L"GameOverlayPinned", 0) ? 0 : 1);
+            SetGameOverlayPinned(!g_gameOverlayPinned.load());
             break;
         case 4:
             Wh_SetIntValue(L"PillOpacityOverride", 100);
@@ -11780,7 +11991,7 @@ class Renderer {
         settingsOpacity_ = settings.pillOpacity;
 
         const bool gameMetricsPresent = primary.kind == IslandKind::Idle &&
-            (settings.gameOverlay || Wh_GetIntValue(L"GameOverlayPinned", 0) != 0);
+            (settings.gameOverlay || g_gameOverlayPinned.load());
         // True while the island is collapsing to nothing (auto-hide / fullscreen).
         islandHiding_ = primary.width < 1.0f && primary.height < 1.0f && !secondary;
 
@@ -11995,7 +12206,10 @@ class Renderer {
         }
 
         total = std::ceil(total / IdleStripLayout::kWidthQuantum) * IdleStripLayout::kWidthQuantum;
-        metrics.totalWidth = Clamp(total, IdleStripLayout::kMinWidth, IdleStripLayout::kMaxWidth);
+        // The 280 px ceiling was chosen for clock + weather. The battery slot adds
+        // up to ~80 px, so the ceiling rises with it instead of clipping the slot.
+        const float maxWidth = IdleStripLayout::kMaxWidth + (metrics.hasBattery ? 80.0f : 0.0f);
+        metrics.totalWidth = Clamp(total, IdleStripLayout::kMinWidth, maxWidth);
         return metrics;
     }
 
@@ -12031,7 +12245,10 @@ class Renderer {
     // Dynamic Island Plus (#99): content-space width the collapsed pill needs to
     // show the whole song title, with room for the cover on the left and the
     // visualiser on the right. Returns 0 when there is nothing to measure.
-    float MeasureCollapsedTitleWidth(const SharedState& state) {
+    float MeasureCollapsedTitleWidth(const SharedState& state, const Settings& settings) {
+        // Like the other measuring functions: the text formats must match the
+        // current Text size before anything is measured with them.
+        EnsureTextFormats(settings.sizeScale, settings.fontFamily, settings.textScale);
         std::wstring title = state.media.title;
         if (title.empty()) title = state.media.sourceName;
         if (title.empty()) return 0.0f;
@@ -15021,7 +15238,7 @@ class Renderer {
 
     void DrawIdleDashboard(const SharedState& state, D2D1_RECT_F rect, const Settings& settings,
                            double now) {
-        if (settings.gameOverlay || Wh_GetIntValue(L"GameOverlayPinned", 0) != 0) {
+        if (settings.gameOverlay || g_gameOverlayPinned.load()) {
             DrawGameOverlay(state, rect, 1.0f);
             return;
         }
@@ -16107,7 +16324,7 @@ class Renderer {
                     const float textRight = waveRect.left - 10.0f;
                     DrawCollapsedLyrics(state,
                                         D2D1::RectF(textLeft, rect.top + 4.0f, textRight, rect.bottom - 4.0f),
-                                        now, lyricsAlpha);
+                                        now, lyricsAlpha, settings.collapsedFullTitle);
                 }
             }
 
@@ -16849,7 +17066,8 @@ class Renderer {
 
     // Draws the current synced lyric line inside `area`. When the line changes,
     // the old one slides up and fades out while the new one rises in from below.
-    void DrawCollapsedLyrics(const SharedState& state, D2D1_RECT_F area, double now, float alpha) {
+    void DrawCollapsedLyrics(const SharedState& state, D2D1_RECT_F area, double now, float alpha,
+                             bool alwaysShowTitle) {
         IDWriteTextFormat* fmt = textFormat_.Get();
         if (!fmt || !dwriteFactory_ || alpha <= 0.01f) {
             return;
@@ -16902,7 +17120,7 @@ class Renderer {
         constexpr int kTitleKey = -3;  // distinct from idx == -1 (before the first line)
         // Dynamic Island Plus: with "full title" on, the title always wins and
         // lyrics no longer replace it in the collapsed pill.
-        const bool showTitle = !lyricsUsable || g_settings.collapsedFullTitle;
+        const bool showTitle = !lyricsUsable || alwaysShowTitle;
         const int showIdx = showTitle ? kTitleKey : idx;
 
         std::wstring fallback = state.media.title;
@@ -21084,7 +21302,7 @@ DWORD WINAPI MouseThreadProc(void*) {
 // The shelf survives restarts. Only *references* are stored (a path per file,
 // the text for pasted snippets) -- never copies of the files themselves.
 //
-//   %LOCALAPPDATA%\DynamicIslandForWindows\filetray\items.dat
+//   <mod storage folder>\filetray\items.dat   (Wh_GetModStoragePath; removed with the mod)
 //
 // Layout (UTF-8, one item per line, oldest first):
 //   DIWFT 1
@@ -21099,11 +21317,11 @@ std::mutex g_ioMutex;  // serialises the load/save file access
 
 bool ResolvePaths(std::wstring* dir, std::wstring* file) {
     wchar_t base[MAX_PATH] = {};
-    const DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", base, ARRAYSIZE(base));
+    const size_t n = Wh_GetModStoragePath(base, ARRAYSIZE(base));
     if (n == 0 || n >= ARRAYSIZE(base)) {
         return false;
     }
-    *dir = std::wstring(base) + L"\\DynamicIslandForWindows\\filetray";
+    *dir = std::wstring(base) + L"\\filetray";
     *file = *dir + L"\\items.dat";
     return true;
 }
@@ -21697,7 +21915,9 @@ void StartFileTrayDrag(const std::wstring& path) {
     ComPtr<IDropSource> source;
     source.Attach(new TrayDropSource());
 
-    constexpr DWORD kOkEffects = DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_LINK;
+    // No DROPEFFECT_MOVE: the tray only holds references, and dropping a file into a
+    // folder on the same drive must copy it, never move the user's original.
+    constexpr DWORD kOkEffects = DROPEFFECT_COPY | DROPEFFECT_LINK;
     DWORD effect = DROPEFFECT_NONE;
 
     // SHDoDragDrop adds the normal Explorer drag image (thumbnail + name).
@@ -21749,80 +21969,6 @@ LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 }
             }
             return 0;
-
-        case WM_DROPFILES: {
-            HDROP drop = reinterpret_cast<HDROP>(wParam);
-            if (!g_settings.fileTrayModule) {
-                DragFinish(drop);
-                return 0;
-            }
-
-            const UINT count = DragQueryFileW(drop, 0xFFFFFFFF, nullptr, 0);
-            std::vector<FileTrayItem> added;
-            added.reserve(count);
-
-            for (UINT i = 0; i < count; ++i) {
-                wchar_t path[MAX_PATH] = {};
-                if (DragQueryFileW(drop, i, path, ARRAYSIZE(path)) == 0) {
-                    continue;
-                }
-
-                FileTrayItem item;
-                item.path = path;
-
-                // BaseNameFromPath instead of PathFindFileNameW so we do not
-                // pull in shlwapi just for this.
-                item.name = BaseNameFromPath(path);
-                if (item.name.empty()) {
-                    item.name = path;
-                }
-
-                WIN32_FILE_ATTRIBUTE_DATA attr = {};
-                if (GetFileAttributesExW(path, GetFileExInfoStandard, &attr)) {
-                    item.isDirectory = (attr.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-                    item.sizeBytes = (static_cast<uint64_t>(attr.nFileSizeHigh) << 32) | attr.nFileSizeLow;
-                }
-
-                // Grab the real Explorer icon so the shelf looks native.
-                SHFILEINFOW info = {};
-                if (SHGetFileInfoW(path, 0, &info, sizeof(info), SHGFI_ICON | SHGFI_SMALLICON) && info.hIcon) {
-                    item.icon = IconToPixelsRef(info.hIcon, 32);
-                    DestroyIcon(info.hIcon);
-                }
-
-                added.push_back(std::move(item));
-            }
-            DragFinish(drop);
-
-            if (!added.empty()) {
-                std::lock_guard lock(g_stateMutex);
-                for (auto& item : added) {
-                    // Re-dropping a file promotes the existing entry instead of
-                    // creating a duplicate.
-                    auto existing = std::find_if(g_state.fileTrayItems.begin(), g_state.fileTrayItems.end(),
-                                                 [&](const FileTrayItem& other) {
-                                                     return _wcsicmp(other.path.c_str(), item.path.c_str()) == 0;
-                                                 });
-                    if (existing != g_state.fileTrayItems.end()) {
-                        g_state.fileTrayItems.erase(existing);
-                    }
-                    g_state.fileTrayItems.push_back(std::move(item));
-                }
-
-                const size_t cap = static_cast<size_t>(std::max(1, g_settings.fileTrayMaxItems));
-                while (g_state.fileTrayItems.size() > cap) {
-                    g_state.fileTrayItems.erase(g_state.fileTrayItems.begin());
-                }
-            }
-
-            // Jump to the shelf so the drop is visibly acknowledged.
-            const int trayTab = FileTrayTabIndex(g_settings);
-            if (trayTab >= 0) {
-                g_idleTab = trayTab;
-            }
-            g_layoutDirty = true;
-            return 0;
-        }
 
         case WM_DESTROY:
             RevokeDragDrop(hwnd);
@@ -22309,9 +22455,9 @@ LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 }
                 const bool gameMetricsPresent =
                     !kinds.empty() && kinds[0] == IslandKind::Idle &&
-                    (g_settings.gameOverlay || Wh_GetIntValue(L"GameOverlayPinned", 0) != 0);
+                    (g_settings.gameOverlay || g_gameOverlayPinned.load());
 
-                bool expanded = Wh_GetIntValue(L"PinnedExpanded", 0) != 0 || g_clickExpanded.load();
+                bool expanded = g_pinnedExpanded.load() || g_clickExpanded.load();
                 if (!gameMetricsPresent && !g_settings.expandOnHover && !expanded) {
                     g_clickExpanded = true;
                     g_layoutDirty = true;
@@ -22455,10 +22601,6 @@ LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             ToggleEndpointMute();
             return 0;
 
-        case WM_LBUTTONDBLCLK:
-            Wh_SetIntValue(L"PinnedExpanded", Wh_GetIntValue(L"PinnedExpanded", 0) ? 0 : 1);
-            return 0;
-
         case WM_MOUSEWHEEL: {
             // Delta is accumulated rather than dropped inside a debounce window, so
             // every notch counts and touchpads (many small deltas) work properly.
@@ -22600,8 +22742,6 @@ DWORD WINAPI RenderThreadProc(void*) {
     if (pChangeWindowMessageFilterEx) {
         if (g_shellHookMessage) pChangeWindowMessageFilterEx(hwnd, g_shellHookMessage, 1 /*MSGFLT_ALLOW*/, nullptr);
         if (g_taskbarCreatedMessage) pChangeWindowMessageFilterEx(hwnd, g_taskbarCreatedMessage, 1 /*MSGFLT_ALLOW*/, nullptr);
-        pChangeWindowMessageFilterEx(hwnd, WM_COPYDATA, 1 /*MSGFLT_ALLOW*/, nullptr);
-        pChangeWindowMessageFilterEx(hwnd, 0x0049 /*WM_COPYGLOBALDATA*/, 1 /*MSGFLT_ALLOW*/, nullptr);
     } else {
         using ChangeWindowMessageFilter_t = BOOL(WINAPI*)(UINT, DWORD);
         static auto pChangeWindowMessageFilter = reinterpret_cast<ChangeWindowMessageFilter_t>(
@@ -22609,8 +22749,6 @@ DWORD WINAPI RenderThreadProc(void*) {
         if (pChangeWindowMessageFilter) {
             if (g_shellHookMessage) pChangeWindowMessageFilter(g_shellHookMessage, 1 /*MSGFLT_ADD*/);
             if (g_taskbarCreatedMessage) pChangeWindowMessageFilter(g_taskbarCreatedMessage, 1 /*MSGFLT_ADD*/);
-            pChangeWindowMessageFilter(WM_COPYDATA, 1 /*MSGFLT_ADD*/);
-            pChangeWindowMessageFilter(0x0049 /*WM_COPYGLOBALDATA*/, 1 /*MSGFLT_ADD*/);
         }
     }
     EnableBlurBehind(hwnd);
@@ -22643,12 +22781,8 @@ DWORD WINAPI RenderThreadProc(void*) {
     // COM apartment this thread already initialised.
     LoadFileTray();
 
-    using TimeBeginPeriod_t = MMRESULT(WINAPI*)(UINT);
-    using TimeEndPeriod_t = MMRESULT(WINAPI*)(UINT);
-    static auto pTimeBeginPeriod = reinterpret_cast<TimeBeginPeriod_t>(
-        GetProcAddress(LoadLibraryW(L"winmm.dll"), "timeBeginPeriod"));
-    static auto pTimeEndPeriod = reinterpret_cast<TimeEndPeriod_t>(
-        GetProcAddress(GetModuleHandleW(L"winmm.dll"), "timeEndPeriod"));
+    // timeBeginPeriod / timeEndPeriod come from winmm, which the mod links with
+    // -lwinmm; no LoadLibrary by bare name is needed.
 
     // A 1ms timer resolution costs power, so it is requested only while the island
     // is actually animating. It used to be requested once here and released at
@@ -22677,13 +22811,11 @@ DWORD WINAPI RenderThreadProc(void*) {
             return;
         }
         if (want) {
-            if (pTimeBeginPeriod && pTimeBeginPeriod(1) == TIMERR_NOERROR) {
+            if (timeBeginPeriod(1) == TIMERR_NOERROR) {
                 highResTimer = true;
             }
         } else {
-            if (pTimeEndPeriod) {
-                pTimeEndPeriod(1);
-            }
+            timeEndPeriod(1);
             highResTimer = false;
         }
     };
@@ -22847,6 +22979,11 @@ DWORD WINAPI RenderThreadProc(void*) {
             nextPrivacyPoll = now + 2.0;  // poll every 2 s
         }
 
+        // One consistent copy of the settings for this iteration's sizing work.
+        // g_settings is replaced wholesale by LoadSettings() on another thread, so
+        // reading its strings (font family) or several fields live can race with it.
+        const Settings loopSettings = GetSettingsCopy();
+
         bool timerJustCompleted = false;
         SharedState snapshot;
         {
@@ -22913,7 +23050,7 @@ DWORD WINAPI RenderThreadProc(void*) {
             secondary = ActivityForKind(kinds[1], g_settings, snapshot);
         }
 
-        const bool pinned = Wh_GetIntValue(L"PinnedExpanded", 0) != 0;
+        const bool pinned = g_pinnedExpanded.load();
 
         if (primary.kind != previousPrimary) {
             if (primary.kind != IslandKind::Idle) {
@@ -22972,13 +23109,13 @@ DWORD WINAPI RenderThreadProc(void*) {
         // *title* change is transient now, so the pill behaves like the clipboard
         // and battery alerts -- it surfaces, then hides again while playback
         // continues in the background.
-        const bool recentTrackChange = g_settings.mediaAutoExpand &&
+        const bool recentTrackChange = loopSettings.mediaAutoExpand &&
                                        !MediaExpandBlocked(snapshot.media) &&
                                        primary.kind == IslandKind::Media &&
                                        snapshot.media.playing &&
                                        !snapshot.media.title.empty() &&
                                        (now - snapshot.media.titleChangedAt <
-                                        static_cast<double>(g_settings.mediaAutoExpandSeconds));
+                                        static_cast<double>(loopSettings.mediaAutoExpandSeconds));
 
         bool isTransientAlert = (primary.kind == IslandKind::Clipboard ||
                                  primary.kind == IslandKind::Notification ||
@@ -23006,7 +23143,7 @@ DWORD WINAPI RenderThreadProc(void*) {
 
         bool isHoverExpanded = g_settings.expandOnHover ? hover : (hover && g_clickExpanded.load());
         const bool gameMetricsPresent = primary.kind == IslandKind::Idle &&
-            (g_settings.gameOverlay || Wh_GetIntValue(L"GameOverlayPinned", 0) != 0);
+            (g_settings.gameOverlay || g_gameOverlayPinned.load());
         if (gameMetricsPresent) {
             isHoverExpanded = false;
         }
@@ -23101,12 +23238,12 @@ DWORD WINAPI RenderThreadProc(void*) {
                 // "10:41:32 PM" at larger Text size.
                 // The > 0 guard preserves ActivityForKind's fully-hidden case.
                 primary.width =
-                    renderer.MeasureIdleStrip(snapshot, g_settings, now).totalWidth *
-                    g_settings.sizeScale;
+                    renderer.MeasureIdleStrip(snapshot, loopSettings, now).totalWidth *
+                    loopSettings.sizeScale;
             }
         }
         if (!isFullscreen && primary.kind == IslandKind::Idle &&
-            (g_settings.gameOverlay || Wh_GetIntValue(L"GameOverlayPinned", 0) != 0)) {
+            (g_settings.gameOverlay || g_gameOverlayPinned.load())) {
             // Width follows the metrics actually enabled (#25) so switching some
             // off shrinks the strip instead of leaving empty space, and compact
             // mode narrows it enough to sit neatly in the taskbar area. Both the
@@ -23129,23 +23266,24 @@ DWORD WINAPI RenderThreadProc(void*) {
                 // (Immersive lyrics: the island keeps its normal 380px width.)
             } else {
                 // Optional clock section on the left of the collapsed pill.
-                const float clockSection = g_settings.mediaPillClock
-                    ? renderer.MeasureMediaPill(snapshot, g_settings).sectionWidth
+                const float clockSection = loopSettings.mediaPillClock
+                    ? renderer.MeasureMediaPill(snapshot, loopSettings).sectionWidth
                     : 0.0f;
-                if (CollapsedLyricsActive(snapshot, g_settings)) {
+                if (CollapsedLyricsActive(snapshot, loopSettings)) {
                     // Collapsed but carrying lyrics: wider pill, same height.
                     float pillContentWidth = kCollapsedLyricsWidth;
-                    if (g_settings.collapsedFullTitle) {
+                    if (loopSettings.collapsedFullTitle) {
                         // Dynamic Island Plus (#99): grow to fit the whole title.
-                        const float titleNeeded = renderer.MeasureCollapsedTitleWidth(snapshot);
+                        const float titleNeeded =
+                            renderer.MeasureCollapsedTitleWidth(snapshot, loopSettings);
                         if (titleNeeded > 0.0f) {
                             pillContentWidth = Clamp(titleNeeded, kCollapsedLyricsWidth,
-                                                     g_settings.collapsedTitleMaxWidth);
+                                                     loopSettings.collapsedTitleMaxWidth);
                         }
                     }
-                    primary.width = (pillContentWidth + clockSection) * g_settings.sizeScale;
-                } else if (g_settings.mediaPillClock) {
-                    primary.width = (MediaPillLayout::kBaseWidth + clockSection) * g_settings.sizeScale;
+                    primary.width = (pillContentWidth + clockSection) * loopSettings.sizeScale;
+                } else if (loopSettings.mediaPillClock) {
+                    primary.width = (MediaPillLayout::kBaseWidth + clockSection) * loopSettings.sizeScale;
                 }
             }
         }
@@ -23733,6 +23871,7 @@ void StopThreads() {
 }  // namespace
 
 BOOL WhTool_ModInit() {
+    g_gameOverlayPinned = Wh_GetIntValue(L"GameOverlayPinned", 0) != 0;
     LoadSettings();
 
     if (!StartThreads()) {
