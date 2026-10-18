@@ -9339,8 +9339,6 @@ void CaptureClipboard(HWND hwnd) {
     }
 
     std::wstring text = ReadClipboardText(hwnd);
-    Wh_Log(L"Clipboard changed: text length=%d, owner='%s'", static_cast<int>(text.size()),
-           ownerTitle);
     if (!text.empty()) {
         constexpr size_t maxChars = 96;
         std::replace(text.begin(), text.end(), L'\r', L' ');
@@ -21922,8 +21920,6 @@ LRESULT CALLBACK OverlayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
 
         case WM_CLIPBOARDUPDATE:
-            Wh_Log(L"WM_CLIPBOARDUPDATE received, clipboard module %s",
-                   g_settings.clipboard ? L"on" : L"OFF");
             if (g_settings.clipboard) {
                 CaptureClipboard(hwnd);
             }
